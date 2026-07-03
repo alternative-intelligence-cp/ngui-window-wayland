@@ -1,18 +1,29 @@
-# Nitpick Build Artifacts
-build.abc
+# Nitpick compilation outputs
 *.ll
-*.bc
 *.s
-
-# Binaries
-*.out
+*.o
+*.obj
 *.exe
+*.out
+*.app
+*.dylib
+*.dll
+*.so
 
-# IDE / Editor
-.vscode/
-.idea/
+# Build directories
+build/
+Build/
+build-*/
+.cache/
+
+# Debug files
+*.pdb
+*.dwo
+
+# Temporary files
+*.tmp
+*.log
+*.bak
 *.swp
-
-# OS generated files
+*~
 .DS_Store
-Thumbs.db
