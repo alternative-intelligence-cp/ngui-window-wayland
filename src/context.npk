@@ -1,0 +1,47 @@
+use "wayland/socket.npk".*;
+use "wayland/registry.npk".*;
+use "wayland/window.npk".*;
+
+pub struct:WaylandContext = {
+    int32: fd;
+    int64: buffer_ptr;
+    int64: width;
+    int64: height;
+    int64: pitch;
+    int64: bpp;
+};
+
+// Connects to the Wayland server, negotiates globals, and prepares the context
+pub func:wayland_context_init = WaylandContext() {
+    int32: fd = raw connect_wayland();
+    
+    if (fd < 0i32) {
+        fail(-1i32);
+    }
+    
+    // Attempt to bind wl_registry just to test two-way communication
+    int32: reg_res = raw wl_get_registry(fd);
+    if (reg_res < 0i32) {
+        int64: _c = raw sys!!(3i64, cast_unchecked<int64>(fd)); // close
+        fail(-2i32);
+    }
+    
+    // Future work: setup wl_shm, memfd_create, mmap the buffer, and xdg_surface
+    
+    pass(WaylandContext{
+        fd: fd,
+        buffer_ptr: 0i64, // To be allocated via memfd_create
+        width: 1920i64,
+        height: 1080i64,
+        pitch: 1920i64 * 4i64,
+        bpp: 4i64
+    });
+};
+
+pub func:wayland_context_deinit = NIL(WaylandContext->:this) {
+    // If buffer_ptr != 0, we would munmap it here
+    
+    // close wayland socket
+    int64: _c = raw sys!!(3i64, cast_unchecked<int64>(this->fd));
+    pass NIL;
+};

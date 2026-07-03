@@ -1,0 +1,27 @@
+use "context.npk".*;
+use "../ngui/src/platform/window_backend.npk".*;
+
+pub func:wl_get_buffer_ptr = int64(WaylandContext->:this) {
+    pass(this->buffer_ptr);
+};
+
+pub func:wl_get_width = int64(WaylandContext->:this) {
+    pass(this->width);
+};
+
+pub func:wl_get_height = int64(WaylandContext->:this) {
+    pass(this->height);
+};
+
+pub func:wl_get_pitch = int64(WaylandContext->:this) {
+    pass(this->pitch);
+};
+
+pub func:wl_get_bpp = int64(WaylandContext->:this) {
+    pass(this->bpp);
+};
+
+pub func:wl_present = NIL(WaylandContext->:this) {
+    // In Wayland, this would trigger wl_surface.attach and wl_surface.commit
+    pass NIL;
+};

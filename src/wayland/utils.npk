@@ -1,0 +1,115 @@
+pub func:wl_memcpy = int64(int64:dest, int64:src, int32:n) {
+    wild int8->: dest_ptr = cast_unchecked<int8-> >(dest);
+    wild int8->: src_ptr = cast_unchecked<int8-> >(src);
+    
+    int32: i = 0i32;
+    while (i < n) {
+        dest_ptr[cast_unchecked<int64>(i)] = src_ptr[cast_unchecked<int64>(i)];
+        i = i + 1i32;
+    }
+    
+    pass(dest);
+};
+
+pub func:wl_strlen = int32(int64:s) {
+    wild int8->: str_ptr = cast_unchecked<int8-> >(s);
+    int32: len = 0i32;
+    
+    while (str_ptr[cast_unchecked<int64>(len)] != 0i8) {
+        len = len + 1i32;
+    }
+    
+    pass(len);
+};
+
+// Compare strings up to len. Returns 1 if match, 0 otherwise
+pub func:wl_strncmp = int32(int64:s1, int64:s2, int32:len) {
+    wild int8->: ptr1 = cast_unchecked<int8-> >(s1);
+    wild int8->: ptr2 = cast_unchecked<int8-> >(s2);
+    
+    int32: i = 0i32;
+    while (i < len) {
+        if (ptr1[cast_unchecked<int64>(i)] != ptr2[cast_unchecked<int64>(i)]) {
+            pass(0i32);
+        }
+        i = i + 1i32;
+    }
+    
+    pass(1i32);
+};
+
+// Returns a pointer to a newly allocated string for the env var value, or 0 if not found
+pub func:wl_getenv = int64(string:name) {
+    int64: name_ptr = cast_unchecked<int64>(name);
+    int32: name_len = raw wl_strlen(name_ptr);
+    
+    // Open /proc/self/environ
+    int64: fd = raw sys!!(2i64, "/proc/self/environ\0", 0i64, 0i64); // O_RDONLY = 0
+    if (fd < 0i64) {
+        pass(0i64);
+    }
+    
+    // Allocate 4KB buffer (should be enough for env vars)
+    int64: buf_size = 4096i64;
+    wild int8->: buf = alloc(buf_size);
+    
+    int64: bytes_read = raw sys!!(0i64, fd, cast_unchecked<int64>(buf), buf_size);
+    int64: _c = raw sys!!(3i64, fd); // close
+    
+    if (bytes_read <= 0i64) {
+        free(buf);
+        pass(0i64);
+    }
+    
+    int64: i = 0i64;
+    int64: result = 0i64;
+    
+    while (i < bytes_read) {
+        int64: current_env_start = cast_unchecked<int64>(buf) + i;
+        
+        // Search for '=' in this env var
+        int64: j = 0i64;
+        int32: match = 0i32;
+        
+        while ((i + j) < bytes_read) {
+            int8: c = buf[i + j];
+            if (c == 61i8) { // '='
+                if (cast_unchecked<int32>(j) == name_len) {
+                    int32: cmp = raw wl_strncmp(current_env_start, name_ptr, name_len);
+                    if (cmp == 1i32) {
+                        match = 1i32;
+                    }
+                }
+                j = j + 1i64;
+                break;
+            }
+            if (c == 0i8) {
+                break;
+            }
+            j = j + 1i64;
+        }
+        
+        if (match == 1i32) {
+            // Found it! The value starts at buf + i + j
+            int64: val_start = current_env_start + j;
+            int32: val_len = raw wl_strlen(val_start);
+            
+            wild int8->: result_buf = alloc(cast_unchecked<int64>(val_len + 1i32));
+            int64: _mc = raw wl_memcpy(cast_unchecked<int64>(result_buf), val_start, val_len + 1i32);
+            result = cast_unchecked<int64>(result_buf);
+            break;
+        }
+        
+        // Advance to next null byte
+        while (i < bytes_read) {
+            if (buf[i] == 0i8) {
+                i = i + 1i64;
+                break;
+            }
+            i = i + 1i64;
+        }
+    }
+    
+    free(buf);
+    pass(result);
+};

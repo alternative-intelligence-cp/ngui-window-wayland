@@ -1,0 +1,9 @@
+use "context.npk".*;
+use "../../ngui/src/event/types.npk".*;
+
+pub func:wl_poll_event = Result<UIEvent>(WaylandContext->:this) {
+    // Stub implementation: currently returns no events.
+    // Future work: poll on the Wayland socket FD and dispatch incoming 
+    // wl_pointer, wl_keyboard events from the Wayland compositor.
+    fail(-1i32);
+};

@@ -1,0 +1,27 @@
+use "../src/context.npk".*;
+use "../src/window.npk".*;
+use "../src/input.npk".*;
+
+pub func:main = int32() {
+    Result<WaylandContext>: ctx_res = wayland_context_init();
+    
+    if (ctx_res.is_error) {
+        // If it fails to connect to Wayland (e.g. no server running in the environment, or no XDG_RUNTIME_DIR),
+        // we just exit cleanly as that's an expected failure mode in many CI/test environments.
+        exit 0i32;
+    }
+    
+    WaylandContext: ctx = ctx_res.value;
+    
+    int64: w = raw wl_get_width(@ctx);
+    if (w != 1920i64) {
+        exit 1i32;
+    }
+    
+    drop wayland_context_deinit(@ctx);
+    exit 0i32;
+};
+
+pub func:failsafe = int32(tbb32:err) {
+    exit 1i32;
+};

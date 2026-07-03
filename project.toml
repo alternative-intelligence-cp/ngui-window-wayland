@@ -1,0 +1,8 @@
+[package]
+name = "ngui-window-wayland"
+version = "0.1.0"
+authors = ["Randy <randy@example.com>"]
+description = "Pure-Nitpick Wayland windowing backend for NGUI"
+
+[dependencies]
+ngui = { path = "../ngui" }
